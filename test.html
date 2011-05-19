@@ -1,0 +1,78 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en-us" lang="en-us">
+<head>
+	
+	<!-- Data Tags -->
+	<title>DragDrop Test</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	
+	<style type="text/css">
+		
+		* {
+			margin: 0;
+			padding: 0;
+		}
+		
+		#dragMe {
+			position: absolute;
+			top: 15px;
+			left: 15px;
+			width: 250px;
+			height: 250px;
+			border: 1px #333 solid;
+			background: #06a;
+			color: #fff;
+			font-size: 12px;
+			font-family: sans-serif;
+		}
+		
+		#withMe {
+			width: 242px;
+			background: #666;
+			border-bottom: 1px #333 solid;
+			cursor: move;
+			padding: 4px;
+		}
+		
+		#dragMe p {
+			padding: 4px;
+		}
+		
+		p.text {
+			font-size: 26px;
+			font-family: cursive;
+			width: 500px;
+			margin: 200px auto;
+		}
+		
+	</style>
+	
+</head>
+<body>
+	
+	<div id="dragMe">
+		<div id="withMe">
+			Drag Me! :D
+		</div>
+		<p>
+			This is some text to test that there are no text selection issues.
+		</p>
+	</div>
+	
+	<p class="text">
+		Lorem ipsum dolor sit amet, consectetur adipiscing elit. Duis libero enim, lacinia sed hendrerit
+		sit amet, congue ut ipsum. Nullam mollis, risus eu porta scelerisque.
+	</p>
+	
+	<!-- JavaScript Includes -->
+	<script type="text/javascript" charset="utf-8" src="drag-drop.js"></script>
+	<script type="text/javascript">
+		
+		var dragMe = document.getElementById('dragMe');
+		var withMe = document.getElementById('withMe');
+		DragDrop.bind(dragMe, withMe);
+		
+	</script>
+	
+</body>
+</html>
