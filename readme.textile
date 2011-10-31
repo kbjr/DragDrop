@@ -17,7 +17,7 @@ h2. Features
 * Simple and intuitive interface
 * Option to seperate the event target from the dragged element
 * Option to define bounding boxes (*new* in version 0.2.1-beta)
-* Very lightweight (only 1.7kb minified and gzipped)
+* Very lightweight (only 1.8kb minified and gzipped)
 
 h2. Samples! :)
 
@@ -25,17 +25,30 @@ h2. Samples! :)
 DragDrop.bind(myElement);
 
 // A more complex version
-DragDrop.bind(myElement, {
-	// The anchor; myElement moves when anotherElement is dragged
+var draggable = DragDrop.bind(myElement, {
+    // The anchor; myElement moves when anotherElement is dragged
     anchor: anotherElement,
+    // The draggable element will now stay bound within it's offsetParent
+    boundingBox: 'offsetParent',
     // Define a dragstart event
     dragstart: function(evt) {
         // ...
     }
 });
 
-// Make myElement get moved when anotherElement is dragged
-DragDrop.bind(myElement, anotherElement);</code></pre>
+// Change the bounding box to some manual positions
+draggable.setBoundingBox({
+    x: { min: 0, max: 600 },
+    y: { min: 0, max: 400 }
+});
+
+// Define a new dragend event
+draggable.bindEvent('dragend', function(evt) {
+    // ...
+});
+
+// This is how you would remove a drag event (if one were defined above)
+draggable.unbindEvent('drag', theBoundDragEventFunction);</code></pre>
 
 
 
