@@ -13,6 +13,21 @@
 			padding: 0;
 		}
 		
+		body {
+			background: #eee;
+		}
+		
+		#wrapper {
+			position: relative;
+			width: 80%;
+			margin: 20px auto;
+			border: 2px #000 solid;
+			background: #fff;
+			-moz-box-shadow: 3px 3px 3px #888;
+			-webkit-box-shadow: 3px 3px 3px #888;
+			box-shadow: 3px 3px 3px #888;
+		}
+		
 		#dragMe {
 			position: absolute;
 			top: 15px;
@@ -43,7 +58,8 @@
 			font-size: 32px;
 			font-family: "URW Chancery L", cursive;
 			width: 650px;
-			margin: 200px auto;
+			margin: 0 auto;
+			padding: 200px 0;
 		}
 		
 	</style>
@@ -51,19 +67,21 @@
 </head>
 <body>
 	
-	<div id="dragMe">
-		<div id="withMe">
-			Drag Me! :D
+	<div id="wrapper">
+		<div id="dragMe">
+			<div id="withMe">
+				Drag Me! :D
+			</div>
+			<p>
+				This is some text to test that there are no text selection issues.
+			</p>
 		</div>
-		<p>
-			This is some text to test that there are no text selection issues.
+	
+		<p class="text">
+			Lorem ipsum dolor sit amet, consectetur adipiscing elit. Duis libero enim, lacinia sed hendrerit
+			sit amet, congue ut ipsum. Nullam mollis, risus eu porta scelerisque.
 		</p>
 	</div>
-	
-	<p class="text">
-		Lorem ipsum dolor sit amet, consectetur adipiscing elit. Duis libero enim, lacinia sed hendrerit
-		sit amet, congue ut ipsum. Nullam mollis, risus eu porta scelerisque.
-	</p>
 	
 	<!-- JavaScript Includes -->
 	<script type="text/javascript" charset="utf-8" src="drag-drop.js"></script>
@@ -79,10 +97,7 @@
 		
 		var dragRef = DragDrop.bind(dragMe, {
 			anchor: withMe,
-			boundingBox: {
-				x: { min: 0, max: 500 },
-				y: { min: 0, max: 300 }
-			},
+			boundingBox: 'offsetParent',
 			dragstart: function(evt) {
 				console.log('DragDrop.bind dragstart', evt);
 			},

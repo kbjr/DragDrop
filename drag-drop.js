@@ -106,6 +106,10 @@
 			return DragDrop.invokeEvent(this, event, source);
 		};
 		
+		BindingReference.prototype.setBoundingBox = function(box) {
+			bindings[this._id].boundingBox = box;
+		};
+		
 	// ----------------------------------------------------------------------------
 	//  Public Functions
 		
@@ -154,15 +158,23 @@
 								// Enforce any bounding box
 								if (options.boundingBox) {
 									var box = options.boundingBox;
+									var minX, maxX, minY, maxY;
 									// Bound inside offset parent
 									if (box === 'offsetParent') {
-										
+										var parent = binding.element.offsetParent;
+										minX = minY = 0;
+										maxX = parent.offsetWidth;
+										maxY = parent.offsetHeight;
 									}
 									// Manual bounding box
-									else if (typeof box === 'object') {
-										posX = Math.min((box.x.max - offsetWidth), Math.max(box.x.min, posX));
-										posY = Math.min((box.y.max - offsetHeight), Math.max(box.y.min, posY));
+									else {
+										minX = box.x.min;
+										maxX = box.x.max;
+										minY = box.y.min;
+										maxY = box.y.max;
 									}
+									posX = Math.max(minX, Math.min(maxX - offsetWidth, posX));
+									posY = Math.max(minY, Math.min(maxY - offsetHeight, posY));
 								}
 								// Move the element
 								binding.element.style.left = posX + 'px';
