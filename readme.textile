@@ -3,7 +3,7 @@ h1. DragDrop
 h3. A JavaScript micro-framework for adding drag-and-drop functionality to elements for advanced UI development
 
 Author: James Brumond
-Version: 0.1.1-dev
+Version: 0.1.2-beta
 
 Copyright 2011 James Brumond
 Dual licensed under MIT and GPL

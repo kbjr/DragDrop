@@ -5,7 +5,7 @@
  * to elements for advanced UI development.
  *
  * @author     James Brumond
- * @version    0.1.1-dev
+ * @version    0.1.2-beta
  * @copyright  Copyright 2011 James Brumond
  * @license    Dual licensed under MIT and GPL
  */
@@ -214,10 +214,15 @@
 		return false;
 	},
 	
+	// Regular expressions for matching classnames
+	cnRegexes = { },
+
 	// Remove a class from an element
 	removeClass = function(elem, cn) {
-		var regex = new RegExp('(^|\\s)+' + cn + '(\\s|$)+');
-		elem.className.replace(regex, ' ');
+		if (! cnRegexes[cn]) {
+			cnRegexes[cn] = new RegExp('(^|\\s)+' + cn + '(\\s|$)+');
+		}
+		elem.className = elem.className.replace(cnRegexes[cn], ' ');
 	},
 	
 	// Add a class to an element
