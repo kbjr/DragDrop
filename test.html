@@ -75,9 +75,10 @@
 		var shouldntHappen = function() {
 			console.log('THIS SHOULDN\'T HAPPEN');
 		};
-
 		
-		DragDrop.bind(dragMe, withMe, {
+		
+		var dragRef = DragDrop.bind(dragMe, {
+			anchor: withMe,
 			dragstart: function(evt) {
 				console.log('DragDrop.bind dragstart', evt);
 			},
@@ -90,25 +91,25 @@
 		});
 
 		
-		DragDrop.bindEvent(dragMe, withMe, 'dragstart', function(evt) {
+		dragRef.bindEvent('dragstart', function(evt) {
 			console.log('DragDrop.bindEvent dragstart', evt);
 		});
-		DragDrop.bindEvent(dragMe, withMe, 'drag', function(evt) {
+		dragRef.bindEvent('drag', function(evt) {
 			console.log('DragDrop.bindEvent drag', evt);
 		});
-		DragDrop.bindEvent(dragMe, withMe, 'dragend', function(evt) {
+		dragRef.bindEvent('dragend', function(evt) {
 			console.log('DragDrop.bindEvent dragend', evt);
 		});
 
 		
-		DragDrop.bindEvent(dragMe, withMe, 'dragstart', shouldntHappen);
-		DragDrop.unbindEvent(dragMe, withMe, 'dragstart', shouldntHappen);
+		dragRef.bindEvent('dragstart', shouldntHappen);
+		dragRef.unbindEvent('dragstart', shouldntHappen);
 		
-		DragDrop.bindEvent(dragMe, withMe, 'drag', shouldntHappen);
-		DragDrop.unbindEvent(dragMe, withMe, 'drag', shouldntHappen);
+		dragRef.bindEvent('drag', shouldntHappen);
+		dragRef.unbindEvent('drag', shouldntHappen);
 		
-		DragDrop.bindEvent(dragMe, withMe, 'dragend', shouldntHappen);
-		DragDrop.unbindEvent(dragMe, withMe, 'dragend', shouldntHappen);
+		dragRef.bindEvent('dragend', shouldntHappen);
+		dragRef.unbindEvent('dragend', shouldntHappen);
 		
 		
 	</script>

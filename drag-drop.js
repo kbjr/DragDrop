@@ -5,7 +5,7 @@
  * to elements for advanced UI development.
  *
  * @author     James Brumond
- * @version    0.1.2-beta
+ * @version    0.2.1-beta
  * @copyright  Copyright 2011 James Brumond
  * @license    Dual licensed under MIT and GPL
  */
@@ -13,9 +13,6 @@
 (function() {
 	
 	var
-	
-	// When an error occurs, should the error be thrown?
-	throwErrors = true,
 	
 	// Is this a touch device?
 	touchEvents = (function() {
@@ -33,209 +30,206 @@
 	 *
 	 * Example:
 	 * 
-	 *   DragDrop.bind(elem[, anchor]);
-	 *   DragDrop.unbind(elem[, anchor]);
+	 *   DragDrop.bind ( element[, options ]);
+	 *   DragDrop.unbind ( reference );
 	 *
 	 * @access  public
 	 */
-	DragDrop = (new (function() {
-		
-		var
-		
-		// Scoped reference to this
-		self = this,
+	DragDrop = (function() {
+		var self = { },
 		
 		// Determine the events to bind to
-		events = (function() {
-			if (touchEvents) {
-				return {
-					start: 'touchstart',
-					move: 'touchmove',
-					end: 'touchend'
-				};
-			} else {
-				return {
-					start: 'mousedown',
-					move: 'mousemove',
-					end: 'mouseup'
-				};
+		events = (touchEvents ?
+			{
+				start: 'touchstart',
+				move: 'touchmove',
+				end: 'touchend'
+			} : {
+				start: 'mousedown',
+				move: 'mousemove',
+				end: 'mouseup'
 			}
-		}()),
+		),
 		
 		// Elements already bound
-		bound = [ ],
+		bindings = [ ],
 		
-		// Check if the given elements are already bound
-		getBinding = function(elem, anchor) {
-			for (var i = 0, c = bound.length; i < c; i++) {
-				if (bound[i].elem === elem && bound[i].anchor === anchor) {
-					return [i, bound[i]];
+		// Check if a given binding (element/anchor pair) already exists
+		bindingExists = function(element, anchor) {
+			for (var i = 0, c = bindings.length; i < c; i++) {
+				if (bindings.element === element && bindings.anchor === anchor) {
+					return true;
 				}
 			}
 			return false;
 		},
-	
-		// Do something with a given binding, if the binding exists
-		withBinding = function(elem, anchor, func) {
-			var binding = getBinding(elem, anchor);
-			if (binding) {
-				func(binding);
+		
+		// Do something with a given binding's given event stack
+		withBindingEvent = function(reference, event, func) {
+			if (bindings[reference._id] && bindings[reference._id].events[event]) {
+				func(bindings[reference._id].events[event]);
 			}
 		},
-	
-		// Do something with a given binding's given event, if the
-		// binding and event exist
-		withBindingEvent = function(elem, anchor, event, func) {
-			if (typeof anchor === 'string') {
-				event = anchor;
-				anchor = elem;
-			}
-			withBinding(elem, anchor, function(binding) {
-				if (binding[1].events.hasOwnProperty(event)) {
-					func(binding[1].events[event]);
-				}
-			});
+		
+		// Parse the arguments of DragDrop.bind
+		parseOptions = function(element, options) {
+			options = options || { };
+			options.element = element;
+			options.anchor = options.anchor || element;
+			return options;
+		},
+		
+		// The next binding ID to use
+		nextBinding = 1,
+
+	// ------------------------------------------------------------------
+	//  A constructor for a resource type used in referencing bindings
+		
+		BindingReference = function() {
+			this._id = nextBinding++;
+		};
+		
+		BindingReference.prototype.unbind = function() {
+			return DragDrop.unbind(this);
+		};
+		
+		BindingReference.prototype.bindEvent = function(event, func) {
+			return DragDrop.bindEvent(this, event, func);
+		};
+		
+		BindingReference.prototype.unbindEvent = function(event, func) {
+			return DragDrop.unbindEvent(this, event, func);
+		};
+		
+		BindingReference.prototype.invokeEvent = function(event, source) {
+			return DragDrop.invokeEvent(this, event, source);
 		};
 		
 	// ----------------------------------------------------------------------------
 	//  Public Functions
 		
 		// Make an element draggable
-		this.bind = function(elem, anchor, eventFuncs) {
-			if (typeof elem === 'object' && elem) {
-				// Check for eventFuncs without anchor
-				if (typeof anchor === 'object' && anchor && typeof anchor.nodeType !== 'number') {
-					eventFuncs = anchor;
-					anchor = false;
-				}
-				anchor = anchor || elem;
+		self.bind = function(element, options) {
+			options = parseOptions(element, options);
+			if (isObject(options.element)) {
 				// Check to make sure the elements aren't already bound
-				if (! getBinding(elem, anchor)) {
+				if (! bindingExists(options.element, options.anchor)) {
 					// Initialize the binding object
+					var reference = new BindingReference();
 					var binding = {
-						elem: elem,
-						anchor: anchor,
+						element: options.element,
+						anchor: options.anchor,
 						dragging: false,
 						event: null,
 						shouldUnbind: false,
 						events: {
-							dragstart: Callstack(eventFuncs && eventFuncs.dragstart),
-							dragend: Callstack(eventFuncs && eventFuncs.dragend),
-							drag: Callstack(eventFuncs && eventFuncs.drag)
+							dragstart: Callstack(options.dragstart),
+							dragend: Callstack(options.dragend),
+							drag: Callstack(options.drag)
 						}
 					};
 					// Bind the first event
-					binding.event = Events.bind(anchor, events.start, function(e) {
+					binding.event = Events.bind(binding.anchor, events.start, function(e) {
 						// Make sure it's a left click
 						if ((window.event && e.button === 1) || e.button === 0) {
 							// Make sure everyone knows the element is being dragged
 							binding.dragging = true;
-							addClass(elem, dragClass);
+							addClass(binding.element, dragClass);
 							// Start calculating movement
-							var
-							posX = getPos(elem, 'left'),
-							posY = getPos(elem, 'top'),
-							tempEvents = [ ];
+							var posX = getPos(binding.element, 'left');
+							var posY = getPos(binding.element, 'top');
+							var tempEvents = [ ];
 							// Bind the movement event
 							tempEvents.push(Events.bind(document, events.move, function(e2) {
-								var
-								offsetX = e2.clientX - e.clientX,
-								offsetY = e2.clientY - e.clientY;
+								// Find the offset
+								var offsetX = e2.clientX - e.clientX;
+								var offsetY = e2.clientY - e.clientY;
 								// Move the element
-								elem.style.left = (posX + offsetX) + 'px';
-								elem.style.top = (posY + offsetY) + 'px';
-								
+								binding.element.style.left = (posX + offsetX) + 'px';
+								binding.element.style.top = (posY + offsetY) + 'px';
 								// Call any "drag" events
-								binding.events.drag.call(elem, new DragEvent('drag', e2));
-								
+								binding.events.drag.call(
+									binding.element, new DragEvent('drag', e2)
+								);
 								return stopEvent(e2);
 							}));
 							// Bind the release event
 							tempEvents.push(Events.bind(document, events.end, function(e2) {
+								// Unbind move and end events
 								for (var i = 0, c = tempEvents.length; i < c; i++) {
 									Events.unbind(tempEvents[i]);
 								}
+								// Clean up...
 								binding.dragging = false;
-								removeClass(elem, dragClass);
+								removeClass(binding.element, dragClass);
 								if (binding.shouldUnbind) {
-									DragDrop.unbind(elem, anchor);
+									DragDrop.unbind(binding.element, binding.anchor);
 								}
-								
 								// Call any "dragend" events
-								binding.events.dragend.call(elem, new DragEvent('dragend', e2));
-								
+								binding.events.dragend.call(
+									binding.element, new DragEvent('dragend', e2)
+								);
 								return stopEvent(e2);
 							}));
 							// Avoid text selection problems
 							document.body.focus();
 							tempEvents.push(Events.bind(document, 'selectstart', false));
-							tempEvents.push(Events.bind(anchor, 'dragstart', false));
-							
+							tempEvents.push(Events.bind(binding.anchor, 'dragstart', false));
 							// Call any "dragstart" events
-							binding.events.dragstart.call(elem, new DragEvent('dragstart', e));
-							
+							binding.events.dragstart.call(
+								binding.element, new DragEvent('dragstart', e)
+							);
 							return stopEvent(e);
 						}
 					});
 					// Add the binding to the list
-					bound.push(binding);
+					bindings[reference._id] = binding;
+					return reference;
 				}
-			}
-			
-			// Handle bad parameters
-			else if (throwErrors) {
-				var type = typeof elem;
-				type = (type === 'object') ? 'NULL' : '"' + type + '"';
-				throw new TypeError('DragDrop.bind: argument 1 expects type "object", ' + type + ' given.');
 			}
 		};
 		
 		// Remove an element's draggableness
-		this.unbind = function(elem, anchor) {
-			if (typeof elem === 'object' && elem) {
-				var binding = getBinding(elem, anchor), index;
-				if (binding) {
-					index = binding[0];
-					binding = binding[1];
-					if (binding.dragging) {
-						binding.shouldUnbind = true;
+		self.unbind = function(reference) {
+			if (reference instanceof BindingReference) {
+				var id = reference._id;
+				if (bindings[id]) {
+					if (bindings[id].dragging) {
+						bindings[id].shouldUnbind = true;
 					} else {
-						Events.unbind(binding.event);
-						arrayRemove(bound, index);
+						Events.unbind(bindings[id].event);
+						bindings[id] = null;
 					}
 				}
-			}
-			
-			// Handle bad parameters
-			else if (throwErrors) {
-				var type = typeof elem;
-				type = (type === 'object') ? 'NULL' : '"' + type + '"';
-				throw new TypeError('DragDrop.unbind: argument 1 expects type "object", ' + type + ' given.');
 			}
 		};
 		
 		// Bind a drag event
-		this.bindEvent = function(elem, anchor, event, func) {
-			withBindingEvent(elem, anchor, event, function(stack) {
+		self.bindEvent = function(reference, event, func) {
+			withBindingEvent(reference, event, function(stack) {
 				stack.push(func);
 			});
 		};
 		
 		// Unbind a drag event
-		this.unbindEvent = function(elem, anchor, event, func) {
-			withBindingEvent(elem, anchor, event, function(stack) {
+		self.unbindEvent = function(reference, event, func) {
+			withBindingEvent(reference, event, function(stack) {
 				stack.remove(func);
 			});
 		};
 		
 		// Manually invoke a drag event
-		this.invokeEvent = function(elem, anchor, event, source) {
-			withBindingEvent(elem, anchor, event, function(stack) {
-				stack.call(elem, new DragEvent(event, source));
+		self.invokeEvent = function(reference, event, source) {
+			withBindingEvent(reference, event, function(stack) {
+				stack.call(
+					bindings[reference._id].element,
+					new DragEvent(event, source)
+				);
 			});
 		};
 		
-	})()),
+		return self;
+	}()),
 	
 // ----------------------------------------------------------------------------
 //  Helper Functions
@@ -291,6 +285,11 @@
 	addClass = function(elem, cn) {
 		removeClass(elem, cn);
 		elem.className += ' ' + cn;
+	},
+	
+	// Check for a non-null object
+	isObject = function(value) {
+		return !! (value && typeof value === 'object');
 	},
 	
 	/**
@@ -377,11 +376,7 @@
 					obj.attachEvent('on' + event, func);
 				};
 			} else {
-				return function() {
-					if (throwErrors) {
-						throw new Error('DragDrop->Events->bindEvent: Could not bind event. No event binder found.');
-					}
-				};
+				return function() { };
 			}
 		}()),
 	
@@ -396,11 +391,7 @@
 					obj.detachEvent('on' + event, func);
 				};
 			} else {
-				return function() {
-					if (throwErrors) {
-						throw new Error('DragDrop->Events->unbindEvent: Could not unbind event. No event unbinder found.');
-					}
-				};
+				return function() { };
 			}
 		}());
 		
