@@ -73,14 +73,41 @@
 				}
 			}
 			return false;
+		},
+	
+		// Do something with a given binding, if the binding exists
+		withBinding = function(elem, anchor, func) {
+			var binding = getBinding(elem, anchor);
+			if (binding) {
+				func(binding);
+			}
+		},
+	
+		// Do something with a given binding's given event, if the
+		// binding and event exist
+		withBindingEvent = function(elem, anchor, event, func) {
+			if (typeof anchor === 'string') {
+				event = anchor;
+				anchor = elem;
+			}
+			withBinding(elem, anchor, function(binding) {
+				if (binding[1].events.hasOwnProperty(event)) {
+					func(binding[1].events[event]);
+				}
+			});
 		};
 		
 	// ----------------------------------------------------------------------------
 	//  Public Functions
 		
 		// Make an element draggable
-		this.bind = function(elem, anchor) {
+		this.bind = function(elem, anchor, eventFuncs) {
 			if (typeof elem === 'object' && elem) {
+				// Check for eventFuncs without anchor
+				if (typeof anchor === 'object' && anchor && typeof anchor.nodeType !== 'number') {
+					eventFuncs = anchor;
+					anchor = false;
+				}
 				anchor = anchor || elem;
 				// Check to make sure the elements aren't already bound
 				if (! getBinding(elem, anchor)) {
@@ -90,7 +117,12 @@
 						anchor: anchor,
 						dragging: false,
 						event: null,
-						shouldUnbind: false
+						shouldUnbind: false,
+						events: {
+							dragstart: Callstack(eventFuncs && eventFuncs.dragstart),
+							dragend: Callstack(eventFuncs && eventFuncs.dragend),
+							drag: Callstack(eventFuncs && eventFuncs.drag)
+						}
 					};
 					// Bind the first event
 					binding.event = Events.bind(anchor, events.start, function(e) {
@@ -113,6 +145,9 @@
 								elem.style.left = (posX + offsetX) + 'px';
 								elem.style.top = (posY + offsetY) + 'px';
 								
+								// Call any "drag" events
+								binding.events.drag.call(elem, new DragEvent('drag', e2));
+								
 								return stopEvent(e2);
 							}));
 							// Bind the release event
@@ -126,12 +161,18 @@
 									DragDrop.unbind(elem, anchor);
 								}
 								
+								// Call any "dragend" events
+								binding.events.dragend.call(elem, new DragEvent('dragend', e2));
+								
 								return stopEvent(e2);
 							}));
 							// Avoid text selection problems
 							document.body.focus();
 							tempEvents.push(Events.bind(document, 'selectstart', false));
 							tempEvents.push(Events.bind(anchor, 'dragstart', false));
+							
+							// Call any "dragstart" events
+							binding.events.dragstart.call(elem, new DragEvent('dragstart', e));
 							
 							return stopEvent(e);
 						}
@@ -171,6 +212,27 @@
 				type = (type === 'object') ? 'NULL' : '"' + type + '"';
 				throw new TypeError('DragDrop.unbind: argument 1 expects type "object", ' + type + ' given.');
 			}
+		};
+		
+		// Bind a drag event
+		this.bindEvent = function(elem, anchor, event, func) {
+			withBindingEvent(elem, anchor, event, function(stack) {
+				stack.push(func);
+			});
+		};
+		
+		// Unbind a drag event
+		this.unbindEvent = function(elem, anchor, event, func) {
+			withBindingEvent(elem, anchor, event, function(stack) {
+				stack.remove(func);
+			});
+		};
+		
+		// Manually invoke a drag event
+		this.invokeEvent = function(elem, anchor, event, source) {
+			withBindingEvent(elem, anchor, event, function(stack) {
+				stack.call(elem, new DragEvent(event, source));
+			});
 		};
 		
 	})()),
@@ -229,6 +291,60 @@
 	addClass = function(elem, cn) {
 		removeClass(elem, cn);
 		elem.className += ' ' + cn;
+	},
+	
+	/**
+	 * A stackable function
+	 *
+	 * @access  private
+	 * @param   function  an initial function
+	 * @return  function
+	 */
+	Callstack = function(func) {
+		var stack = [ ];
+		var result = function() {
+			var ret;
+			for (var i = 0, c = stack.length; i < c; i++) {
+				ret = stack[i].apply(this, arguments);
+			}
+			return ret;
+		};
+		result.push = function() {
+			stack.push.apply(stack, arguments);
+		};
+		result.remove = function() {
+			var args = Array.prototype.slice.call(arguments);
+			var result = [ ];
+			OUTER: for (var i = 0, c1 = stack.length; i < c1; i++) {
+				for (var j = 0, c2 = args.length; j < c2; j++) {
+					if (stack[i] === args[j]) {
+						continue OUTER;
+					}
+				}
+				result.push(stack[i]);
+			}
+			stack = result;
+		};
+		if (typeof func === 'function') {
+			stack.push(func);
+		}
+		return result;
+	},
+	
+	/**
+	 * Custom event constructor
+	 *
+	 * @access  private
+	 * @param   string    type
+	 * @param   object    original event object
+	 */
+	DragEvent = function DragEvent(type, original) {
+		this.type = type;
+		this.originalEvent = original;
+		this.altKey = original.altKey || false;
+		this.ctrlKey = original.ctrlKey || false;
+		this.shiftKey = original.shiftKey || false;
+		this.timestamp = original.timestamp || (+new Date);
 	},
 	
 	/**

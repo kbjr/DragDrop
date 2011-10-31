@@ -66,12 +66,50 @@
 	</p>
 	
 	<!-- JavaScript Includes -->
-	<script type="text/javascript" charset="utf-8" src="drag-drop.min.js"></script>
+	<script type="text/javascript" charset="utf-8" src="drag-drop.js"></script>
 	<script type="text/javascript">
 		
 		var dragMe = document.getElementById('dragMe');
 		var withMe = document.getElementById('withMe');
-		DragDrop.bind(dragMe, withMe);
+		
+		var shouldntHappen = function() {
+			console.log('THIS SHOULDN\'T HAPPEN');
+		};
+
+		
+		DragDrop.bind(dragMe, withMe, {
+			dragstart: function(evt) {
+				console.log('DragDrop.bind dragstart', evt);
+			},
+			drag: function(evt) {
+				console.log('DragDrop.bind drag', evt);
+			},
+			dragend: function(evt) {
+				console.log('DragDrop.bind dragend', evt);
+			}
+		});
+
+		
+		DragDrop.bindEvent(dragMe, withMe, 'dragstart', function(evt) {
+			console.log('DragDrop.bindEvent dragstart', evt);
+		});
+		DragDrop.bindEvent(dragMe, withMe, 'drag', function(evt) {
+			console.log('DragDrop.bindEvent drag', evt);
+		});
+		DragDrop.bindEvent(dragMe, withMe, 'dragend', function(evt) {
+			console.log('DragDrop.bindEvent dragend', evt);
+		});
+
+		
+		DragDrop.bindEvent(dragMe, withMe, 'dragstart', shouldntHappen);
+		DragDrop.unbindEvent(dragMe, withMe, 'dragstart', shouldntHappen);
+		
+		DragDrop.bindEvent(dragMe, withMe, 'drag', shouldntHappen);
+		DragDrop.unbindEvent(dragMe, withMe, 'drag', shouldntHappen);
+		
+		DragDrop.bindEvent(dragMe, withMe, 'dragend', shouldntHappen);
+		DragDrop.unbindEvent(dragMe, withMe, 'dragend', shouldntHappen);
+		
 		
 	</script>
 	
