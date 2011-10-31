@@ -16,6 +16,7 @@ h2. Features
 
 * Simple and intuitive interface
 * Option to seperate the event target from the dragged element
+* Bindable dragstart/drag/dragend events
 * Option to define bounding boxes (*new* in version 0.2.1-beta)
 * Very lightweight (only 1.8kb minified and gzipped)
 
