@@ -3,15 +3,20 @@ h1. DragDrop
 h3. A JavaScript micro-framework for adding drag-and-drop functionality to elements for advanced UI development
 
 Author: James Brumond
-Version: 0.1.3-beta
+Version: 0.2.1-beta
 
 Copyright 2011 James Brumond
 Dual licensed under MIT and GPL
+
+h4. Notice
+
+The change to version 0.2.1-beta is *NOT* backwards compatible.
 
 h2. Features
 
 * Simple and intuitive interface
 * Option to seperate the event target from the dragged element
+* Option to define bounding boxes (*new* in version 0.2.1-beta)
 * Very lightweight (only 1.7kb minified and gzipped)
 
 h2. Samples! :)
@@ -19,35 +24,18 @@ h2. Samples! :)
 <pre><code>// Make myElement drag-and-drop enabled
 DragDrop.bind(myElement);
 
-// Make myElement get moved when anotherElement is dragged
-DragDrop.bind(myElement, anotherElement);
-
-// ------ Binding events ----------
-
-// Adding an event when initially binding dragdrop
-DragDrop.bind(elem1, elem2, {
+// A more complex version
+DragDrop.bind(myElement, {
+	// The anchor; myElement moves when anotherElement is dragged
+    anchor: anotherElement,
+    // Define a dragstart event
     dragstart: function(evt) {
         // ...
     }
 });
 
-// Binding an event function after the fact
-DragDrop.bindEvent(elem1, elem2, 'drag', function(evt) {
-	// ...
-});
-
-// Unbinding a previously bound event function
-DragDrop.unbindEvent(elem1, elem2, 'dragend', someFunctionToRemove);
-
-//
-// Note:
-//  All of the functions that deal with event binding can also
-//  not take a second parameter, the same way DragDrop.bind does
-//  in the first sample. Just make sure that all function calls
-//  are made with the same params (so, if you call DragDrop.bind
-//  with two diiferent elements, DragDrop.bindEvent also needs
-//  both given).
-//</code></pre>
+// Make myElement get moved when anotherElement is dragged
+DragDrop.bind(myElement, anotherElement);</code></pre>
 
 
 
