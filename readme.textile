@@ -10,7 +10,7 @@ Dual licensed under MIT and GPL
 
 h4. Notice
 
-The change to version 0.2.1-beta is *NOT* backwards compatible.
+The change to version 0.2.1-beta is *NOT* backwards compatible. Make sure to look over the samples below.
 
 h2. Features
 
