@@ -12,7 +12,7 @@ h2. Features
 
 * Simple and intuitive interface
 * Option to seperate the event target from the dragged element
-* Very lightweight (only 1.4kb minified and gzipped)
+* Very lightweight (only 1.7kb minified and gzipped)
 
 h2. Samples! :)
 
