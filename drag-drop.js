@@ -76,6 +76,7 @@
 			options = options || { };
 			options.element = element;
 			options.anchor = options.anchor || element;
+			options.boundingBox = options.boundingBox || null;
 			return options;
 		},
 		
@@ -122,6 +123,7 @@
 						dragging: false,
 						event: null,
 						shouldUnbind: false,
+						boundingBox: options.boundingBox,
 						events: {
 							dragstart: Callstack(options.dragstart),
 							dragend: Callstack(options.dragend),
@@ -136,17 +138,35 @@
 							binding.dragging = true;
 							addClass(binding.element, dragClass);
 							// Start calculating movement
-							var posX = getPos(binding.element, 'left');
-							var posY = getPos(binding.element, 'top');
+							var startX = getPos(binding.element, 'left');
+							var startY = getPos(binding.element, 'top');
 							var tempEvents = [ ];
 							// Bind the movement event
 							tempEvents.push(Events.bind(document, events.move, function(e2) {
-								// Find the offset
+								// Find all needed offsets
 								var offsetX = e2.clientX - e.clientX;
 								var offsetY = e2.clientY - e.clientY;
+								var offsetWidth = binding.element.offsetWidth;
+								var offsetHeight = binding.element.offsetHeight;
+								// Find the new positions
+								var posX = startX + offsetX;
+								var posY = startY + offsetY;
+								// Enforce any bounding box
+								if (options.boundingBox) {
+									var box = options.boundingBox;
+									// Bound inside offset parent
+									if (box === 'offsetParent') {
+										
+									}
+									// Manual bounding box
+									else if (typeof box === 'object') {
+										posX = Math.min((box.x.max - offsetWidth), Math.max(box.x.min, posX));
+										posY = Math.min((box.y.max - offsetHeight), Math.max(box.y.min, posY));
+									}
+								}
 								// Move the element
-								binding.element.style.left = (posX + offsetX) + 'px';
-								binding.element.style.top = (posY + offsetY) + 'px';
+								binding.element.style.left = posX + 'px';
+								binding.element.style.top = posY + 'px';
 								// Call any "drag" events
 								binding.events.drag.call(
 									binding.element, new DragEvent('drag', e2)

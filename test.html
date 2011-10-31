@@ -79,6 +79,10 @@
 		
 		var dragRef = DragDrop.bind(dragMe, {
 			anchor: withMe,
+			boundingBox: {
+				x: { min: 0, max: 500 },
+				y: { min: 0, max: 300 }
+			},
 			dragstart: function(evt) {
 				console.log('DragDrop.bind dragstart', evt);
 			},
