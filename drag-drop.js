@@ -169,7 +169,6 @@
 									// Bound to the dimensions of the window
 									else if (box === 'windowSize') {
 										var dimensions = getWindowSize();
-										console.log(dimensions);
 										minX = minY = 0;
 										maxX = dimensions.x;
 										maxY = dimensions.y;
