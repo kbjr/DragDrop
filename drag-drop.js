@@ -166,6 +166,13 @@
 										maxX = parent.offsetWidth;
 										maxY = parent.offsetHeight;
 									}
+									// Bound to the dimensions of the window
+									else if (box === 'windowSize') {
+										var dimensions = getWindowSize();
+										minX = minY = 0;
+										maxX = dimensions.x;
+										maxY = dimensions.y;
+									}
 									// Manual bounding box
 									else {
 										minX = box.x.min;
@@ -288,6 +295,14 @@
 		} else if (elem.style) {
 			return elem.style[prop];
 		}
+	},
+	
+	// Get the dimensions of the window
+	getWindowSize = function() {
+		return {
+			w: window.innerWidth || document.documentElement.clientWidth || body().clientWidth,
+			h: window.innerHeight || document.documentElement.clientHeight || body().clientHeight
+		};
 	},
 	
 	// Stop an event
