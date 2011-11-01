@@ -5,7 +5,7 @@
  * to elements for advanced UI development.
  *
  * @author     James Brumond
- * @version    0.2.1-beta
+ * @version    0.2.2-beta
  * @copyright  Copyright 2011 James Brumond
  * @license    Dual licensed under MIT and GPL
  */
@@ -169,6 +169,7 @@
 									// Bound to the dimensions of the window
 									else if (box === 'windowSize') {
 										var dimensions = getWindowSize();
+										console.log(dimensions);
 										minX = minY = 0;
 										maxX = dimensions.x;
 										maxY = dimensions.y;
@@ -300,8 +301,8 @@
 	// Get the dimensions of the window
 	getWindowSize = function() {
 		return {
-			w: window.innerWidth || document.documentElement.clientWidth || body().clientWidth,
-			h: window.innerHeight || document.documentElement.clientHeight || body().clientHeight
+			x: window.innerWidth || document.documentElement.clientWidth || body().clientWidth,
+			y: window.innerHeight || document.documentElement.clientHeight || body().clientHeight
 		};
 	},
 	
