@@ -5,7 +5,7 @@
  * to elements for advanced UI development.
  *
  * @author     James Brumond
- * @version    0.2.2-beta
+ * @version    0.2.3-beta
  * @copyright  Copyright 2011 James Brumond
  * @license    Dual licensed under MIT and GPL
  */
@@ -129,15 +129,21 @@
 						shouldUnbind: false,
 						boundingBox: options.boundingBox,
 						events: {
+							beforedrag: Callstack(options.beforedrag),
 							dragstart: Callstack(options.dragstart),
 							dragend: Callstack(options.dragend),
-							drag: Callstack(options.drag)
+							drag: Callstack(options.drag),
+							unbind: Callstack(options.unbind)
 						}
 					};
 					// Bind the first event
 					binding.event = Events.bind(binding.anchor, events.start, function(e) {
 						// Make sure it's a left click
 						if ((window.event && e.button === 1) || e.button === 0) {
+							// Call any "beforedrag" events before calculations begin
+							binding.events.beforedrag.call(
+								binding.element, new DragEvent('beforedrag', e)
+							);
 							// Make sure everyone knows the element is being dragged
 							binding.dragging = true;
 							addClass(binding.element, dragClass);
@@ -239,6 +245,10 @@
 						Events.unbind(bindings[id].event);
 						bindings[id] = null;
 					}
+					// Call any "unbind" events
+					binding.events.unbind.call(
+						binding.element, new DragEvent('unbind', e)
+					);
 				}
 			}
 		};
