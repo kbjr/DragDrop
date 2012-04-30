@@ -1,0 +1,84 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>Dragdrop by kbjr</title>
+    
+    <link rel="stylesheet" href="stylesheets/styles.css">
+    <link rel="stylesheet" href="stylesheets/pygment_trac.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+    <div class="wrapper">
+      <header>
+        <h1>Dragdrop</h1>
+        <p>A JavaScript micro-framework for adding drag-and-drop functionality to elements for advanced UI development</p>
+        <p class="view"><a href="https://github.com/kbjr/DragDrop">View the Project on GitHub <small>kbjr/DragDrop</small></a></p>
+        <ul>
+          <li><a href="https://github.com/kbjr/DragDrop/zipball/master">Download <strong>ZIP File</strong></a></li>
+          <li><a href="https://github.com/kbjr/DragDrop/tarball/master">Download <strong>TAR Ball</strong></a></li>
+          <li><a href="https://github.com/kbjr/DragDrop">Fork On <strong>GitHub</strong></a></li>
+        </ul>
+      </header>
+      <section>
+        <h1>License</h1>
+
+<p>Copyright 2012 James Brumond
+Dual licensed under MIT and GPL</p>
+
+<h1>Features</h1>
+
+<ul>
+<li>Simple and intuitive interface</li>
+<li>Option to seperate the event target from the dragged element</li>
+<li>Bindable dragstart/drag/dragend events</li>
+<li>Option to define bounding boxes (<em>new</em> in version 0.2.1-beta)</li>
+<li>Very lightweight (only 1.8kb minified and gzipped)</li>
+</ul><h1>Samples! :)</h1>
+
+<div class="highlight">
+<pre><span class="c1">// Make myElement drag-and-drop enabled</span>
+<span class="nx">DragDrop</span><span class="p">.</span><span class="nx">bind</span><span class="p">(</span><span class="nx">myElement</span><span class="p">);</span>
+
+<span class="c1">// A more complex version</span>
+<span class="kd">var</span> <span class="nx">draggable</span> <span class="o">=</span> <span class="nx">DragDrop</span><span class="p">.</span><span class="nx">bind</span><span class="p">(</span><span class="nx">myElement</span><span class="p">,</span> <span class="p">{</span>
+    <span class="c1">// The anchor; myElement moves when anotherElement is dragged</span>
+    <span class="nx">anchor</span><span class="o">:</span> <span class="nx">anotherElement</span><span class="p">,</span>
+    <span class="c1">// The draggable element will now stay bound within it's offsetParent</span>
+    <span class="nx">boundingBox</span><span class="o">:</span> <span class="s1">'offsetParent'</span><span class="p">,</span>
+    <span class="c1">// Define a dragstart event</span>
+    <span class="nx">dragstart</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">evt</span><span class="p">)</span> <span class="p">{</span>
+        <span class="c1">// ...</span>
+    <span class="p">}</span>
+<span class="p">});</span>
+
+<span class="c1">// Change the bounding box to some manual positions</span>
+<span class="nx">draggable</span><span class="p">.</span><span class="nx">setBoundingBox</span><span class="p">({</span>
+    <span class="nx">x</span><span class="o">:</span> <span class="p">{</span> <span class="nx">min</span><span class="o">:</span> <span class="mi">0</span><span class="p">,</span> <span class="nx">max</span><span class="o">:</span> <span class="mi">600</span> <span class="p">},</span>
+    <span class="nx">y</span><span class="o">:</span> <span class="p">{</span> <span class="nx">min</span><span class="o">:</span> <span class="mi">0</span><span class="p">,</span> <span class="nx">max</span><span class="o">:</span> <span class="mi">400</span> <span class="p">}</span>
+<span class="p">});</span>
+
+<span class="c1">// Define a new dragend event</span>
+<span class="nx">draggable</span><span class="p">.</span><span class="nx">bindEvent</span><span class="p">(</span><span class="s1">'dragend'</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">evt</span><span class="p">)</span> <span class="p">{</span>
+    <span class="c1">// ...</span>
+<span class="p">});</span>
+
+<span class="c1">// This is how you would remove a drag event (if one were defined above)</span>
+<span class="nx">draggable</span><span class="p">.</span><span class="nx">unbindEvent</span><span class="p">(</span><span class="s1">'drag'</span><span class="p">,</span> <span class="nx">theBoundDragEventFunction</span><span class="p">);</span>
+</pre>
+</div>
+
+      </section>
+      <footer>
+        <p>This project is maintained by <a href="https://github.com/kbjr">kbjr</a></p>
+        <p><small>Hosted on GitHub Pages &mdash; Theme by <a href="https://github.com/orderedlist">orderedlist</a></small></p>
+      </footer>
+    </div>
+    <script src="javascripts/scale.fix.js"></script>
+    
+  </body>
+</html>
