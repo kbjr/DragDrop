@@ -5,22 +5,20 @@
  * to elements for advanced UI development.
  *
  * @author     James Brumond
- * @version    0.2.3-beta
+ * @version    0.3.0
  * @copyright  Copyright 2011 James Brumond
  * @license    Dual licensed under MIT and GPL
  */
+
+/*jshint browser: true, bitwise: false, camelcase: false, eqnull: true, latedef: false,
+  plusplus: false, jquery: true, shadow: true, smarttabs: true, loopfunc: true */
 
 (function() {
 	
 	var
 	
 	// Is this a touch device?
-	touchEvents = (function() {
-		var ret, elem = document.createElement('div');
-		ret = ('ontouchstart' in elem);
-		elem = null;
-		return ret;
-	}()),
+	touchEvents = ('ontouchstart' in window),
 	
 	// A class to add when an element is being dragged
 	dragClass = 'drag',
@@ -57,7 +55,7 @@
 		// Check if a given binding (element/anchor pair) already exists
 		bindingExists = function(element, anchor) {
 			for (var i = 0, c = bindings.length; i < c; i++) {
-				if (bindings.element === element && bindings.anchor === anchor) {
+				if (bindings[i] && bindings[i].element === element && bindings[i].anchor === anchor) {
 					return true;
 				}
 			}
@@ -116,121 +114,128 @@
 		// Make an element draggable
 		self.bind = function(element, options) {
 			options = parseOptions(element, options);
-			if (isObject(options.element)) {
-				// Check to make sure the elements aren't already bound
-				if (! bindingExists(options.element, options.anchor)) {
-					// Initialize the binding object
-					var reference = new BindingReference();
-					var binding = {
-						element: options.element,
-						anchor: options.anchor,
-						dragging: false,
-						event: null,
-						shouldUnbind: false,
-						boundingBox: options.boundingBox,
-						events: {
-							beforedrag: Callstack(options.beforedrag),
-							dragstart: Callstack(options.dragstart),
-							dragend: Callstack(options.dragend),
-							drag: Callstack(options.drag),
-							unbind: Callstack(options.unbind)
-						}
-					};
-					// Bind the first event
-					binding.event = Events.bind(binding.anchor, events.start, function(e) {
-						// Make sure it's a left click
-						if ((window.event && e.button === 1) || e.button === 0) {
-							// Call any "beforedrag" events before calculations begin
-							binding.events.beforedrag.call(
-								binding.element, new DragEvent('beforedrag', e)
+			if (! isObject(options.element)) {
+				throw new Error('Must give an element to drag');
+			}
+			if (getStyle(options.anchor, 'position') === 'static') {
+				throw new Error('Cannot drag-drop an element with position:static');
+			}
+			// Check to make sure the elements aren't already bound
+			if (! bindingExists(options.element, options.anchor)) {
+				// Initialize the binding object
+				var reference = new BindingReference();
+				var binding = {
+					element: options.element,
+					anchor: options.anchor,
+					dragging: false,
+					event: null,
+					shouldUnbind: false,
+					boundingBox: options.boundingBox,
+					events: {
+						beforedrag: Callstack(options.beforedrag),
+						dragstart: Callstack(options.dragstart),
+						dragend: Callstack(options.dragend),
+						drag: Callstack(options.drag),
+						unbind: Callstack(options.unbind)
+					}
+				};
+				// Bind the first event
+				binding.event = Events.bind(binding.anchor, events.start, function(e) {
+					// Make sure it's a left click or touch event
+					if ((window.event && e.button === 1) || e.button === 0 || touchEvents) {
+						stopEvent(e);
+						// Call any "beforedrag" events before calculations begin
+						binding.events.beforedrag.call(
+							binding.element, new DragEvent('beforedrag', e, binding)
+						);
+						// Make sure everyone knows the element is being dragged
+						binding.dragging = true;
+						addClass(binding.element, dragClass);
+						// Start calculating movement
+						var startX = getPos(binding.element, 'left');
+						var startY = getPos(binding.element, 'top');
+						var tempEvents = [ ];
+						// The target for the move and end events is dependent on the input type
+						var target = (touchEvents ? binding.anchor : document);
+						// Bind the movement event
+						tempEvents.push(Events.bind(target, events.move, function(e2) {
+							// Find all needed offsets
+							var offsetX = e2.clientX - e.clientX;
+							var offsetY = e2.clientY - e.clientY;
+							var offsetWidth = binding.element.offsetWidth;
+							var offsetHeight = binding.element.offsetHeight;
+							// Find the new positions
+							var posX = startX + offsetX;
+							var posY = startY + offsetY;
+							// Enforce any bounding box
+							if (binding.boundingBox) {
+								var box = binding.boundingBox;
+								var minX, maxX, minY, maxY;
+								// Bound inside offset parent
+								if (box === 'offsetParent') {
+									var parent = binding.element.offsetParent;
+									minX = minY = 0;
+									maxX = parent.offsetWidth;
+									maxY = parent.offsetHeight;
+								}
+								// Bound to the dimensions of the window
+								else if (box === 'windowSize') {
+									var dimensions = getWindowSize();
+									minX = minY = 0;
+									maxX = dimensions.x;
+									maxY = dimensions.y;
+								}
+								// Manual bounding box
+								else {
+									minX = box.x.min;
+									maxX = box.x.max;
+									minY = box.y.min;
+									maxY = box.y.max;
+								}
+								posX = Math.max(minX, Math.min(maxX - offsetWidth, posX));
+								posY = Math.max(minY, Math.min(maxY - offsetHeight, posY));
+							}
+							// Move the element
+							binding.element.style.left = posX + 'px';
+							binding.element.style.top = posY + 'px';
+							// Call any "drag" events
+							binding.events.drag.call(
+								binding.element, new DragEvent('drag', e2, binding)
 							);
-							// Make sure everyone knows the element is being dragged
-							binding.dragging = true;
-							addClass(binding.element, dragClass);
-							// Start calculating movement
-							var startX = getPos(binding.element, 'left');
-							var startY = getPos(binding.element, 'top');
-							var tempEvents = [ ];
-							// Bind the movement event
-							tempEvents.push(Events.bind(document, events.move, function(e2) {
-								// Find all needed offsets
-								var offsetX = e2.clientX - e.clientX;
-								var offsetY = e2.clientY - e.clientY;
-								var offsetWidth = binding.element.offsetWidth;
-								var offsetHeight = binding.element.offsetHeight;
-								// Find the new positions
-								var posX = startX + offsetX;
-								var posY = startY + offsetY;
-								// Enforce any bounding box
-								if (options.boundingBox) {
-									var box = options.boundingBox;
-									var minX, maxX, minY, maxY;
-									// Bound inside offset parent
-									if (box === 'offsetParent') {
-										var parent = binding.element.offsetParent;
-										minX = minY = 0;
-										maxX = parent.offsetWidth;
-										maxY = parent.offsetHeight;
-									}
-									// Bound to the dimensions of the window
-									else if (box === 'windowSize') {
-										var dimensions = getWindowSize();
-										minX = minY = 0;
-										maxX = dimensions.x;
-										maxY = dimensions.y;
-									}
-									// Manual bounding box
-									else {
-										minX = box.x.min;
-										maxX = box.x.max;
-										minY = box.y.min;
-										maxY = box.y.max;
-									}
-									posX = Math.max(minX, Math.min(maxX - offsetWidth, posX));
-									posY = Math.max(minY, Math.min(maxY - offsetHeight, posY));
-								}
-								// Move the element
-								binding.element.style.left = posX + 'px';
-								binding.element.style.top = posY + 'px';
-								// Call any "drag" events
-								binding.events.drag.call(
-									binding.element, new DragEvent('drag', e2)
-								);
-								return stopEvent(e2);
-							}));
-							// Bind the release event
-							tempEvents.push(Events.bind(document, events.end, function(e2) {
-								// Unbind move and end events
-								for (var i = 0, c = tempEvents.length; i < c; i++) {
-									Events.unbind(tempEvents[i]);
-								}
-								// Clean up...
-								binding.dragging = false;
-								removeClass(binding.element, dragClass);
-								if (binding.shouldUnbind) {
-									DragDrop.unbind(binding.element, binding.anchor);
-								}
-								// Call any "dragend" events
-								binding.events.dragend.call(
-									binding.element, new DragEvent('dragend', e2)
-								);
-								return stopEvent(e2);
-							}));
-							// Avoid text selection problems
-							document.body.focus();
-							tempEvents.push(Events.bind(document, 'selectstart', false));
-							tempEvents.push(Events.bind(binding.anchor, 'dragstart', false));
-							// Call any "dragstart" events
-							binding.events.dragstart.call(
-								binding.element, new DragEvent('dragstart', e)
+							return stopEvent(e2);
+						}));
+						// Bind the release event
+						tempEvents.push(Events.bind(target, events.end, function(e2) {
+							// Unbind move and end events
+							for (var i = 0, c = tempEvents.length; i < c; i++) {
+								Events.unbind(tempEvents[i]);
+							}
+							// Clean up...
+							binding.dragging = false;
+							removeClass(binding.element, dragClass);
+							if (binding.shouldUnbind) {
+								DragDrop.unbind(binding.element, binding.anchor);
+							}
+							// Call any "dragend" events
+							binding.events.dragend.call(
+								binding.element, new DragEvent('dragend', e2, binding)
 							);
-							return stopEvent(e);
-						}
-					});
-					// Add the binding to the list
-					bindings[reference._id] = binding;
-					return reference;
-				}
+							return stopEvent(e2);
+						}));
+						// Avoid text selection problems
+						document.body.focus();
+						tempEvents.push(Events.bind(document, 'selectstart', false));
+						tempEvents.push(Events.bind(binding.anchor, 'dragstart', false));
+						// Call any "dragstart" events
+						binding.events.dragstart.call(
+							binding.element, new DragEvent('dragstart', e, binding)
+						);
+						return false;
+					}
+				});
+				// Add the binding to the list
+				bindings[reference._id] = binding;
+				return reference;
 			}
 		};
 		
@@ -247,7 +252,7 @@
 					}
 					// Call any "unbind" events
 					binding.events.unbind.call(
-						binding.element, new DragEvent('unbind', e)
+						binding.element, new DragEvent('unbind', e, binding)
 					);
 				}
 			}
@@ -272,7 +277,7 @@
 			withBindingEvent(reference, event, function(stack) {
 				stack.call(
 					bindings[reference._id].element,
-					new DragEvent(event, source)
+					new DragEvent(event, source, reference)
 				);
 			});
 		};
@@ -394,13 +399,15 @@
 	 * @param   string    type
 	 * @param   object    original event object
 	 */
-	DragEvent = function DragEvent(type, original) {
+	DragEvent = function DragEvent(type, original, binding) {
 		this.type = type;
 		this.originalEvent = original;
 		this.altKey = original.altKey || false;
 		this.ctrlKey = original.ctrlKey || false;
 		this.shiftKey = original.shiftKey || false;
-		this.timestamp = original.timestamp || (+new Date);
+		this.timestamp = original.timestamp || (+new Date());
+		this.pos = getPosition(original);
+		this.binding = binding;
 	},
 	
 	/**
@@ -474,6 +481,22 @@
 		};
 	
 	}());
+	
+	function getPosition(evt) {
+		var posX = 0;
+		var posY = 0;
+		if (evt.targetTouches) {
+			posX = evt.targetTouches[0].pageX;
+			posY = evt.targetTouches[0].pageY;
+		} else if (evt.pageX || evt.pageY) {
+			posX = evt.pageX;
+			posY = evt.pageY;
+		} else if (evt.clientX || evt.clientY) {
+			posX = evt.clientX + document.body.scrollLeft + document.documentElement.scrollLeft;
+			posY = evt.clientY + document.body.scrollTop + document.documentElement.scrollTop;
+		}
+		return {x: posX, y: posY};
+	}
 	
 // ----------------------------------------------------------------------------
 //  Expose
