@@ -117,7 +117,7 @@
 			if (! isObject(options.element)) {
 				throw new Error('Must give an element to drag');
 			}
-			if (getStyle(options.anchor, 'position') === 'static') {
+			if (getStyle(options.element, 'position') === 'static') {
 				throw new Error('Cannot drag-drop an element with position:static');
 			}
 			// Check to make sure the elements aren't already bound
