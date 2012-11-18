@@ -488,6 +488,9 @@
 		if (evt.targetTouches) {
 			posX = evt.targetTouches[0].pageX;
 			posY = evt.targetTouches[0].pageY;
+		} else if (evt.touches) {
+			posX = evt.touches[0].pageX;
+			posY = evt.touches[0].pageY;
 		} else if (evt.pageX || evt.pageY) {
 			posX = evt.pageX;
 			posY = evt.pageY;
