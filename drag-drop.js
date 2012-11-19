@@ -5,7 +5,7 @@
  * to elements for advanced UI development.
  *
  * @author     James Brumond
- * @version    0.3.0
+ * @version    0.3.1
  * @copyright  Copyright 2011 James Brumond
  * @license    Dual licensed under MIT and GPL
  */
@@ -75,6 +75,8 @@
 			options.element = element;
 			options.anchor = options.anchor || element;
 			options.boundingBox = options.boundingBox || null;
+			options.releaseAnchors = options.releaseAnchors || [ ];
+			options.releaseAnchors.unshift(document);
 			return options;
 		},
 		
@@ -127,6 +129,7 @@
 				var binding = {
 					element: options.element,
 					anchor: options.anchor,
+					releaseAnchors: options.releaseAnchors,
 					dragging: false,
 					event: null,
 					shouldUnbind: false,
@@ -154,6 +157,10 @@
 						// Start calculating movement
 						var startX = getPos(binding.element, 'left');
 						var startY = getPos(binding.element, 'top');
+						// These are used in some bounding box calculations
+						var startOffsetLeft = binding.element.offsetLeft;
+						var startOffsetTop = binding.element.offsetTop;
+						// A place to hold on to event functions we are going to unbind later
 						var tempEvents = [ ];
 						// The target for the move and end events is dependent on the input type
 						var target = (touchEvents ? binding.anchor : document);
@@ -174,9 +181,14 @@
 								// Bound inside offset parent
 								if (box === 'offsetParent') {
 									var parent = binding.element.offsetParent;
-									minX = minY = 0;
-									maxX = parent.offsetWidth;
-									maxY = parent.offsetHeight;
+									if (getStyle(binding.element, 'position') === 'relative') {
+										minX = -startOffsetLeft;
+										minY = -startOffsetTop;
+									} else {
+										minX = minY = 0;
+									}
+									maxX = parent.offsetWidth + minX;
+									maxY = parent.offsetHeight + minY;
 								}
 								// Bound to the dimensions of the window
 								else if (box === 'windowSize') {
@@ -204,8 +216,25 @@
 							);
 							return stopEvent(e2);
 						}));
-						// Bind the release event
-						tempEvents.push(Events.bind(target, events.end, function(e2) {
+						// Bind the release events
+						for (var i = 0, c = binding.releaseAnchors.length; i < c; i++) {
+							var elem = binding.releaseAnchors[i];
+							tempEvents.push(
+								Events.bind(elem, events.end, onRelease(elem))
+							);
+						}
+						// Avoid text selection problems
+						document.body.focus();
+						tempEvents.push(Events.bind(document, 'selectstart', false));
+						tempEvents.push(Events.bind(binding.anchor, 'dragstart', false));
+						// Call any "dragstart" events
+						binding.events.dragstart.call(
+							binding.element, new DragEvent('dragstart', e, binding)
+						);
+						return false;
+					}
+					function onRelease(elem) {
+						return function(e2) {
 							// Unbind move and end events
 							for (var i = 0, c = tempEvents.length; i < c; i++) {
 								Events.unbind(tempEvents[i]);
@@ -218,19 +247,12 @@
 							}
 							// Call any "dragend" events
 							binding.events.dragend.call(
-								binding.element, new DragEvent('dragend', e2, binding)
+								binding.element, new DragEvent('dragend', e2, binding, {
+									releaseAnchor: elem
+								})
 							);
 							return stopEvent(e2);
-						}));
-						// Avoid text selection problems
-						document.body.focus();
-						tempEvents.push(Events.bind(document, 'selectstart', false));
-						tempEvents.push(Events.bind(binding.anchor, 'dragstart', false));
-						// Call any "dragstart" events
-						binding.events.dragstart.call(
-							binding.element, new DragEvent('dragstart', e, binding)
-						);
-						return false;
+						};
 					}
 				});
 				// Add the binding to the list
@@ -353,6 +375,20 @@
 	isObject = function(value) {
 		return !! (value && typeof value === 'object');
 	},
+
+	// Gets the target property of an event
+	getEventTarget = function(evt) {
+		var target;
+		if (evt.target) {
+			target = evt.target;
+		} else if (evt.srcElement) {
+			target = evt.srcElement;
+		}
+		if (target.nodeType === 3) {
+			target = target.parentNode;
+		}
+		return target;
+	},
 	
 	/**
 	 * A stackable function
@@ -399,7 +435,7 @@
 	 * @param   string    type
 	 * @param   object    original event object
 	 */
-	DragEvent = function DragEvent(type, original, binding) {
+	DragEvent = function DragEvent(type, original, binding, extras) {
 		this.type = type;
 		this.originalEvent = original;
 		this.altKey = original.altKey || false;
@@ -408,6 +444,15 @@
 		this.timestamp = original.timestamp || (+new Date());
 		this.pos = getPosition(original);
 		this.binding = binding;
+		this.target = getEventTarget(original);
+
+		if (extras) {
+			for (var i in extras) {
+				if (extras.hasOwnProperty(i)) {
+					this[i] = extras[i];
+				}
+			}
+		}
 	},
 	
 	/**
@@ -488,9 +533,6 @@
 		if (evt.targetTouches) {
 			posX = evt.targetTouches[0].pageX;
 			posY = evt.targetTouches[0].pageY;
-		} else if (evt.touches) {
-			posX = evt.touches[0].pageX;
-			posY = evt.touches[0].pageY;
 		} else if (evt.pageX || evt.pageY) {
 			posX = evt.pageX;
 			posY = evt.pageY;
