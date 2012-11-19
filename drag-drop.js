@@ -5,7 +5,7 @@
  * to elements for advanced UI development.
  *
  * @author     James Brumond
- * @version    0.3.1
+ * @version    0.3.0
  * @copyright  Copyright 2011 James Brumond
  * @license    Dual licensed under MIT and GPL
  */
@@ -160,6 +160,7 @@
 						// These are used in some bounding box calculations
 						var startOffsetLeft = binding.element.offsetLeft;
 						var startOffsetTop = binding.element.offsetTop;
+						var startTotalOffset = getOffset(binding.element);
 						// A place to hold on to event functions we are going to unbind later
 						var tempEvents = [ ];
 						// The target for the move and end events is dependent on the input type
@@ -193,9 +194,14 @@
 								// Bound to the dimensions of the window
 								else if (box === 'windowSize') {
 									var dimensions = getWindowSize();
-									minX = minY = 0;
-									maxX = dimensions.x;
-									maxY = dimensions.y;
+									if (getStyle(binding.element, 'position') === 'relative') {
+										minX = -startTotalOffset.x;
+										minY = -startTotalOffset.y;
+									} else {
+										minX = minY = 0;
+									}
+									maxX = dimensions.x + minX;
+									maxY = dimensions.y + minY;
 								}
 								// Manual bounding box
 								else {
@@ -340,6 +346,19 @@
 			x: window.innerWidth || document.documentElement.clientWidth || body().clientWidth,
 			y: window.innerHeight || document.documentElement.clientHeight || body().clientHeight
 		};
+	},
+
+	// Get the total offset position of an element in the document
+	getOffset = function(elem) {
+		var x = 0;
+		var y = 0;
+		if (elem.offsetParent) {
+			do {
+				x += elem.offsetLeft;
+				y += elem.offsetTop;
+			} while (elem = elem.offsetParent);
+		}
+		return {x: x, y: y};
 	},
 	
 	// Stop an event
