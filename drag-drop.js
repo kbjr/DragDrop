@@ -188,8 +188,8 @@
 									} else {
 										minX = minY = 0;
 									}
-									maxX = parent.offsetWidth + minX;
-									maxY = parent.offsetHeight + minY;
+									maxX = parent.clientWidth + minX;
+									maxY = parent.clientHeight + minY;
 								}
 								// Bound to the dimensions of the window
 								else if (box === 'windowSize') {
