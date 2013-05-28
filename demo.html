@@ -1,0 +1,152 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>Demo / Dragdrop by kbjr</title>
+    
+    <style type="text/css">
+
+      body, html {
+        background: #ccc;
+      }
+
+      #background-content {
+        color: #444;
+        font-size: 20px;
+        font-family: cursive;
+        text-align: center;
+        margin: 100px 200px 100px 400px;
+      }
+
+      .demo-draggable {
+        position: fixed;
+        left: 25px;
+        width: 150px;
+        height: 150px;
+        border: 1px #000 solid;
+        background: #fff;
+        background: rgba(255,255,255,0.7);
+        cursor: pointer;
+      }
+
+        #demo-draggable-1 {
+          top: 25px;
+        }
+
+        #demo-draggable-2 {
+          top: 200px;
+        }
+
+        #demo-draggable-3 {
+          top: 375px;
+        }
+
+      .demo-anchor {
+        position: absolute;
+        top: 50px;
+        left: 50px;
+        width: 50px;
+        height: 50px;
+        background: #c00;
+        background: rgba(200,0,0,0.8);
+      }
+
+        #demo-anchor-1 {
+          background: #c00;
+          background: rgba(200,0,0,0.8);
+        }
+
+        #demo-anchor-2 {
+          background: #0c0;
+          background: rgba(0,200,0,0.8);
+        }
+
+        #demo-anchor-3 {
+          background: #00c;
+          background: rgba(0,0,200,0.8);
+        }
+
+      .demo-heading {
+        position: fixed;
+        left: 190px;
+        font-family: sans-serif;
+        font-weight: normal;
+      }
+
+        #demo-heading-1 {
+          top: 20px;
+        }
+
+        #demo-heading-2 {
+          top: 195px;
+        }
+
+        #demo-heading-3 {
+          top: 370px;
+        }
+
+    </style>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+  </head>
+  <body>
+
+    <div id="background-content">
+      Lorem ipsum dolor sit amet, consectetur adipiscing elit. Etiam pharetra consequat elit vitae ullamcorper. Donec vel nibh in ante aliquet viverra. Aenean vitae tempus magna. Etiam ipsum turpis, malesuada et malesuada a, varius auctor dolor. Pellentesque lacus est, suscipit nec tempus eget, adipiscing ut elit. Donec ullamcorper posuere felis, a malesuada nisi tincidunt id. Donec hendrerit posuere urna eu aliquam. Vestibulum rhoncus malesuada mollis. Cras fermentum mauris non arcu semper condimentum. Ut non leo aliquet lacus fringilla consectetur id id magna. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia Curae; Mauris non libero diam, in ullamcorper nibh. Donec nec imperdiet tellus. Vivamus tincidunt lorem nec urna mattis vitae ullamcorper sapien tincidunt. Integer vel magna eros. Nullam ullamcorper commodo blandit.
+    </div>
+
+    <div id="demos">
+
+      <!-- First Draggable -->
+      <div id="demo-draggable-1" aria-labelledby="demo-heading-1" class="demo-draggable">
+        <div id="demo-anchor-1" class="demo-anchor"></div>
+      </div>
+      <h2 id="demo-heading-1" class="demo-heading">&larr; Drag Me!</h2>
+
+      <!-- Second Draggable -->
+      <div id="demo-draggable-2" aria-labelledby="demo-heading-2" class="demo-draggable">
+        <div id="demo-anchor-2" class="demo-anchor"></div>
+      </div>
+      <h2 id="demo-heading-2" class="demo-heading">&larr; Drag Me!</h2>
+
+      <!-- Third Draggable -->
+      <div id="demo-draggable-3" aria-labelledby="demo-heading-3" class="demo-draggable">
+        <div id="demo-anchor-3" class="demo-anchor"></div>
+      </div>
+      <h2 id="demo-heading-3" class="demo-heading">&larr; Drag Me!</h2>
+
+    </div>
+
+    <script src="javascripts/drag-drop.js"></script>
+    <script>
+
+      (function() {
+
+        for (var i = 1; i <=3; i++) {
+          initDraggable(i);
+        }
+
+        function initDraggable(i) {
+          // Get the demo elements
+          var draggable  = document.getElementById('demo-draggable-' + i);
+          var anchor     = document.getElementById('demo-anchor-' + i);
+          var heading    = document.getElementById('demo-heading-' + i);
+
+          // Initialize the drag-drop functionality
+          var dragdrop = DragDrop.bind(draggable, {
+            anchor: anchor,
+            boundingBox: 'windowSize',
+            dragstart: function() {
+              heading.style.display = 'none';
+            }
+          });
+        }
+
+        
+
+      }());
+
+    </script>
+  </body>
+</html>
