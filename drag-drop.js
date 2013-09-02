@@ -272,15 +272,17 @@
 			if (reference instanceof BindingReference) {
 				var id = reference._id;
 				if (bindings[id]) {
-					if (bindings[id].dragging) {
-						bindings[id].shouldUnbind = true;
+					var binding = bindings[id];
+
+					if (binding.dragging) {
+						binding.shouldUnbind = true;
 					} else {
-						Events.unbind(bindings[id].event);
+						Events.unbind(binding.event);
 						bindings[id] = null;
 					}
 					// Call any "unbind" events
 					binding.events.unbind.call(
-						binding.element, new DragEvent('unbind', e, binding)
+						binding.element, new DragEvent('unbind', { target: true }, binding)
 					);
 				}
 			}
